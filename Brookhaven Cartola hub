@@ -1,0 +1,108 @@
+-- TextChatService 5秒间隔发送脚本
+local Players = game:GetService("Players")
+local TextChatService = game:GetService("TextChatService")
+
+-- 目标消息列表
+local targetMessages = {
+    "dick",
+    "ass", 
+    "nigger",
+    "bitch",
+    "fuck you",
+    "suck my dick",
+    "操你妈",
+    "大鸡巴"
+}
+
+local messageIndex = 1
+local lastSendTime = 0
+
+-- 获取主要聊天频道
+local function getMainChatChannel()
+    local generalChannel = TextChatService:FindFirstChild("TextChannels")
+    if generalChannel then
+        generalChannel = generalChannel:FindFirstChild("RBXGeneral")
+        if generalChannel then
+            return generalChannel
+        end
+    end
+    
+    local allChannels = TextChatService:GetChildren()
+    for _, channel in ipairs(allChannels) do
+        if channel:IsA("TextChannel") and channel.Name ~= "RBXSystem" then
+            return channel
+        end
+    end
+    return nil
+end
+
+-- 发送单条消息
+local function sendSingleMessage()
+    local currentTime = tick()
+    local timeSinceLastSend = currentTime - lastSendTime
+    
+    -- 确保至少间隔5秒
+    if timeSinceLastSend < 5 then
+        local waitTime = 5 - timeSinceLastSend
+        wait(waitTime)
+    end
+    
+    local chatChannel = getMainChatChannel()
+    
+    if chatChannel then
+        local success, err = pcall(function()
+            local message = targetMessages[messageIndex]
+            
+            -- 直接发送消息，不添加时间戳
+            chatChannel:SendAsync(message)
+            lastSendTime = tick()
+            print("💬 发送: " .. message)
+            
+            -- 更新消息索引
+            messageIndex = messageIndex + 1
+            if messageIndex > #targetMessages then
+                messageIndex = 1
+            end
+        end)
+        
+        if not success then
+            print("❌ 发送失败: " .. tostring(err))
+            lastSendTime = tick()
+        end
+    else
+        print("❌ 未找到聊天频道")
+    end
+end
+
+-- 5秒间隔发送循环
+local function fiveSecondIntervalSend()
+    while true do
+        sendSingleMessage()
+        
+        -- 固定5秒间隔
+        wait(5)
+    end
+end
+
+-- 安全启动
+print("🚀 5秒间隔聊天系统启动...")
+
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+if not Players.LocalPlayer then
+    Players.PlayerAdded:Wait()
+end
+
+wait(3)
+
+print("✅ 系统就绪，开始5秒间隔发送...")
+
+-- 立即发送第一条
+sendSingleMessage()
+
+-- 启动5秒间隔循环
+spawn(fiveSecondIntervalSend)
+
+print("🔄 5秒间隔发送循环已启动")
